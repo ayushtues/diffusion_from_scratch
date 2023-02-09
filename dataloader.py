@@ -24,7 +24,7 @@ class Mnist_custom(torchvision.datasets.MNIST):
         if self.target_transform is not None:
             target = self.target_transform(target)
 
-        time = torch.randint(0, 100, (1,)) # time value needed in diffusion models, might add time embeddings here only in future
+        time = torch.randint(0, 99, (1,)) # time value needed in diffusion models, might add time embeddings here only in future
 
         return img, target, time
 

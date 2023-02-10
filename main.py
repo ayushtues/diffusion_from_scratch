@@ -1,6 +1,6 @@
 import torch
 from dataloader import get_dataloader
-from diffusion import Diffusion_forward
+from diffusion import Diffusion
 
 dataloader = get_dataloader()
 
@@ -29,9 +29,13 @@ coeff2 =  (( 1- prev_alpha_hat_ts ) / ( 1- curr_alpha_hat_ts )) * (curr_sqrt_alp
 beta_hat_ts = ((1 - prev_alpha_hat_ts) / (1 - curr_alpha_hat_ts)) * curr_beta_ts
 coeff_3 = (1-curr_alpha_hat_ts)/curr_sqrt_alpha_hat_ts_2
 
-model = Diffusion_forward(curr_sqrt_alpha_ts, curr_sqrt_alpha_hat_ts_2, 1, 1)
+model = Diffusion(curr_sqrt_alpha_ts, curr_sqrt_alpha_hat_ts_2, curr_alpha_ts, curr_beta_ts, 1, 1)
 loss_fn = torch.nn.MSELoss()
 optimizer = torch.optim.Adam(model.parameters())
+
+model.eval()
+x  = model.sample()
+print("sample:", x.shape)
 
 
 def train_one_epoch(epoch_index):

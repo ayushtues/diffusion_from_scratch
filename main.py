@@ -2,6 +2,12 @@ import torch
 from dataloader import get_dataloader
 from diffusion import Diffusion
 
+if torch.cuda.is_available(): 
+ dev = "cuda:0" 
+else: 
+ dev = "cpu" 
+device = torch.device(dev) 
+
 dataloader = get_dataloader()
 
 
@@ -29,13 +35,15 @@ coeff2 =  (( 1- prev_alpha_hat_ts ) / ( 1- curr_alpha_hat_ts )) * (curr_sqrt_alp
 beta_hat_ts = ((1 - prev_alpha_hat_ts) / (1 - curr_alpha_hat_ts)) * curr_beta_ts
 coeff_3 = (1-curr_alpha_hat_ts)/curr_sqrt_alpha_hat_ts_2
 
+
+curr_sqrt_alpha_ts = curr_sqrt_alpha_ts.to(device)
+curr_sqrt_alpha_hat_ts_2 = curr_sqrt_alpha_hat_ts_2.to(device)
+curr_alpha_ts = curr_alpha_ts.to(device)
+curr_beta_ts = curr_beta_ts.to(device)
+
 model = Diffusion(curr_sqrt_alpha_ts, curr_sqrt_alpha_hat_ts_2, curr_alpha_ts, curr_beta_ts, 1, 1)
 loss_fn = torch.nn.MSELoss()
 optimizer = torch.optim.Adam(model.parameters())
-
-model.eval()
-x  = model.sample()
-print("sample:", x.shape)
 
 
 def train_one_epoch(epoch_index):
@@ -46,16 +54,19 @@ def train_one_epoch(epoch_index):
     # iter(training_loader) so that we can track the batch
     # index and do some intra-epoch reporting
     for i, data in enumerate(dataloader):
+        print(i)
         x, y, t = data
+        x = x.to(device)
+        t = t.to(device)
+        t_embed = torch.randn(64, 32, device=device)
         eps = torch.randn_like(x)
-        print("i:", i)
 
 
         # Zero your gradients for every batch!
         optimizer.zero_grad()
 
         # Make predictions for this batch
-        eps_pred = model(x, t, eps)
+        eps_pred = model(x, t, t_embed, eps)
 
         # Compute the loss and its gradients
         loss = loss_fn(eps_pred, eps)
@@ -63,6 +74,8 @@ def train_one_epoch(epoch_index):
 
         # Adjust learning weights
         optimizer.step()
+
+        loss = loss.detach().cpu().numpy()
 
         # Gather data and report
         running_loss += loss.item()
@@ -77,7 +90,7 @@ def train_one_epoch(epoch_index):
 # Initializing in a separate cell so we can easily add more epochs to the same run
 
 epoch_number = 0
-
+model = model.to(device)
 EPOCHS = 5
 
 
@@ -90,5 +103,10 @@ for epoch in range(EPOCHS):
     print(avg_loss)
     epoch_number += 1
     
+
+
+model.eval()
+x  = model.sample()
+print("sample:", x.shape)
 
 

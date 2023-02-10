@@ -30,6 +30,6 @@ class Mnist_custom(torchvision.datasets.MNIST):
 
 def get_dataloader():
   mnist = Mnist_custom(root='./data', train=True, download=True, transform=ToTensor())
-  dataloader = DataLoader(mnist, batch_size=64, shuffle=True)
+  dataloader = DataLoader(mnist, batch_size=64, shuffle=True, drop_last=True)
   return dataloader
 

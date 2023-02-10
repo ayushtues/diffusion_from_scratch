@@ -14,10 +14,8 @@ class Diffusion(nn.Module):
         self.curr_alpha_ts_2 = 1 - self.curr_alpha_ts
 
     
-    def forward(self, x, t, eps):
+    def forward(self, x, t, t_embed, eps):
       t = t.squeeze(-1)
-      t_embed = torch.randn(64, 32)
-
       c1 = torch.gather(self.curr_sqrt_alpha_ts, 0, t).unsqueeze(-1).unsqueeze(-1).unsqueeze(-1) # TODO, move this to the dataset itself instead of using gather
       c2 = torch.gather(self.curr_sqrt_alpha_hat_ts_2, 0, t).unsqueeze(-1).unsqueeze(-1).unsqueeze(-1)
 

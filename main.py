@@ -1,6 +1,8 @@
 import torch
 from dataloader import get_dataloader
 from diffusion import Diffusion
+from torch.utils.tensorboard import SummaryWriter
+from datetime import datetime
 
 if torch.cuda.is_available(): 
  dev = "cuda:0" 
@@ -46,15 +48,15 @@ loss_fn = torch.nn.MSELoss()
 optimizer = torch.optim.Adam(model.parameters())
 
 
-def train_one_epoch(epoch_index):
+def train_one_epoch(epoch_index, batches, tb_writer):
     running_loss = 0.
-    last_loss = 0.
-
     # Here, we use enumerate(training_loader) instead of
     # iter(training_loader) so that we can track the batch
     # index and do some intra-epoch reporting
     for i, data in enumerate(dataloader):
-        print(i)
+        batch = epoch_index * len(dataloader) + i + 1
+        if(batch==batches):
+          return running_loss/(i+1)
         x, y, t = data
         x = x.to(device)
         t = t.to(device)
@@ -79,19 +81,22 @@ def train_one_epoch(epoch_index):
 
         # Gather data and report
         running_loss += loss.item()
-        if i % 1000 == 999:
-            last_loss = running_loss / 1000 # loss per batch
-            print('  batch {} loss: {}'.format(i + 1, last_loss))
-            tb_x = epoch_index * len(dataloader) + i + 1
-            running_loss = 0.
+        if i % 10 == 0:
+            print('  batch {} loss: {}'.format(batch, loss))
+            tb_writer.add_scalar('Loss/train', loss, batch)
+      
+    
 
-    return last_loss
+    return running_loss/len(dataloader)
 
 # Initializing in a separate cell so we can easily add more epochs to the same run
 
+timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+writer = SummaryWriter('runs/fashion_trainer_{}'.format(timestamp))
 epoch_number = 0
 model = model.to(device)
-EPOCHS = 5
+batches = 1000
+EPOCHS = int(batches/len(dataloader)+1)
 
 
 for epoch in range(EPOCHS):
@@ -99,14 +104,14 @@ for epoch in range(EPOCHS):
 
     # Make sure gradient tracking is on, and do a pass over the data
     model.train(True)
-    avg_loss = train_one_epoch(epoch_number)
-    print(avg_loss)
+    avg_loss = train_one_epoch(epoch_number, batches, writer)
+    print(f"EPOCH : {epoch+1} loss : {avg_loss}")
     epoch_number += 1
     
 
 
-model.eval()
-x  = model.sample()
-print("sample:", x.shape)
+# model.eval()
+# x  = model.sample()
+# print("sample:", x.shape)
 
 

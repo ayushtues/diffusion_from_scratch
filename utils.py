@@ -31,3 +31,6 @@ def get_values(device):
   curr_beta_ts = curr_beta_ts.to(device)
 
   return curr_sqrt_alpha_ts, curr_sqrt_alpha_hat_ts_2, curr_alpha_ts, curr_beta_ts
+
+def print_stats(x, name):
+  print(f"{name} max: {torch.max(x)}, min: {torch.min(x)}, mean: {torch.mean(x)}, std: {torch.std(x)}")

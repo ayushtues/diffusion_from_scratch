@@ -3,8 +3,8 @@ from dataloader import get_dataloader
 from diffusion import Diffusion
 from torch.utils.tensorboard import SummaryWriter
 from datetime import datetime
-from utils import get_values
-from unet import get_position_embeddings
+from utils import get_values, print_stats
+from models import get_position_embeddings
 
 if torch.cuda.is_available(): 
  dev = "cuda:0" 
@@ -43,6 +43,10 @@ def train_one_epoch(epoch_index, batches, tb_writer, run_path, save_freq=200):
         # Make predictions for this batch
         eps_pred = model(x, t, t_embed, eps)
 
+        print_stats(eps, "eps")
+        print_stats(eps_pred, "eps_pred")
+
+
         # Compute the loss and its gradients
         loss = loss_fn(eps_pred, eps)
         loss.backward()
@@ -58,10 +62,10 @@ def train_one_epoch(epoch_index, batches, tb_writer, run_path, save_freq=200):
             print('  batch {} loss: {}'.format(batch, loss))
             tb_writer.add_scalar('Loss/train', loss, batch)
 
-        # Track best performance, and save the model's state
-        if i%save_freq == 0:
-            model_path = run_path+'/model_{}_{}'.format(timestamp, batch)
-            torch.save(model.state_dict(), model_path)
+        # # Track best performance, and save the model's state
+        # if i%save_freq == 0:
+        #     model_path = run_path+'/model_{}_{}'.format(timestamp, batch)
+        #     torch.save(model.state_dict(), model_path)
           
     
 

@@ -5,6 +5,7 @@ from torch.utils.tensorboard import SummaryWriter
 from datetime import datetime
 from utils import get_values
 import torchvision.transforms as T
+import torchvision
 
 if torch.cuda.is_available(): 
  dev = "cuda:0" 
@@ -19,7 +20,6 @@ model.load_state_dict(torch.load("/content/drive/MyDrive/diffusion/diffusion_fro
 model = model.to(device)
 model.eval()
 x  = model.sample(device)
-x = x.squeeze(0)
-transform = T.ToPILImage()
-img = transform(x)
-img.save('sample.png')
+print(len(x))
+print(x[0].shape)
+torchvision.utils.save_image(x, 'sample.png')

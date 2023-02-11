@@ -106,6 +106,37 @@ class OutConv(nn.Module):
 
 """ Full assembly of the parts to form the complete network """
 
+class SimpleMLP(nn.Module):
+  def __init__(self):
+    super(SimpleMLP, self).__init__()
+    self.mlp1 = nn.Linear(784+32, 128)
+    self.b1 = nn.BatchNorm1d(128)
+    self.mlp2 = nn.Linear(128+32, 32)
+    self.b2 = nn.BatchNorm1d(32)
+    self.mlp3 = nn.Linear(32+32, 128)
+    self.b3 = nn.BatchNorm1d(128)
+    self.mlp4 = nn.Linear(128+32, 784)
+    self.relu = nn.ReLU()
+
+  def forward(self, x, t):
+    x = torch.flatten(x, 1, 3) # B*C*H*W -> B*(C*H*W)
+    x = torch.cat((x, t), dim=-1)
+    x = self.mlp1(x)
+    x = self.b1(x)
+    x = self.relu(x)
+    x = torch.cat((x, t), dim=-1)
+    x = self.mlp2(x)
+    x = self.b2(x)
+    x = self.relu(x)
+    x = torch.cat((x, t), dim=-1)
+    x = self.mlp3(x)
+    x = self.b3(x)
+    x = self.relu(x)
+    x = torch.cat((x, t), dim=-1)
+    x = self.mlp4(x)
+    x  = x.view(-1, 1, 28, 28)
+    return x
+
 
 
 class UNet(nn.Module):

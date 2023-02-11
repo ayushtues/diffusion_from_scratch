@@ -1,12 +1,13 @@
 import torch
 from torch import nn
-from unet import UNet
-from unet import get_position_embeddings
+from models import UNet, SimpleMLP
+from models import get_position_embeddings
 
 class Diffusion(nn.Module):
     def __init__(self, curr_sqrt_alpha_ts, curr_sqrt_alpha_hat_ts_2, curr_alpha_ts, curr_beta_ts, n_channels, n_classes, bilinear=False):
         super(Diffusion, self).__init__()
-        self.unet = UNet(n_channels, n_classes, bilinear=False)
+        # self.model = UNet(n_channels, n_classes, bilinear=False)
+        self.model = SimpleMLP()
         self.curr_sqrt_alpha_ts = curr_sqrt_alpha_ts
         self.curr_sqrt_alpha_hat_ts_2 = curr_sqrt_alpha_hat_ts_2
         self.curr_alpha_ts = curr_alpha_ts
@@ -21,15 +22,16 @@ class Diffusion(nn.Module):
 
       input = x*c1 + eps*c2
 
-      eps_pred = self.unet(input, t_embed)
+      eps_pred = self.model(input, t_embed)
 
       return eps_pred
     
     def sample(self, device):
       x = torch.randn([1, 1, 28, 28], device=device)
+      x_returned = []
       for i in reversed(range(99)):
         t = get_position_embeddings(i, device).unsqueeze(0)
-        eps_pred = self.unet(x, t)
+        eps_pred = self.model(x, t)
         eps_pred = (self.curr_alpha_ts_2[i].unsqueeze(-1).unsqueeze(-1).unsqueeze(-1) / self.curr_sqrt_alpha_hat_ts_2[i].unsqueeze(-1).unsqueeze(-1).unsqueeze(-1) ) * eps_pred
         x = x - eps_pred
         x = x * (1/self.curr_sqrt_alpha_ts[i].unsqueeze(-1).unsqueeze(-1).unsqueeze(-1))
@@ -40,7 +42,10 @@ class Diffusion(nn.Module):
           z = torch.zeros_like(x, device=device)
         x = x + z
 
-      return x
+        if i%10 == 0:
+          x_returned.append(x.squeeze(0).detach())
+
+      return x_returned
 
 
 

@@ -25,7 +25,7 @@ def positionalencoding1d(d_model, length):
     return pe
 
 def get_position_embeddings(t, device):
-  x = positionalencoding1d(32, 100).to(device)
+  x = positionalencoding1d(512, 1000).to(device)
   emb = x[t]
   return emb
 
@@ -109,13 +109,13 @@ class OutConv(nn.Module):
 class SimpleMLP(nn.Module):
   def __init__(self):
     super(SimpleMLP, self).__init__()
-    self.mlp1 = nn.Linear(784+32, 128)
-    self.b1 = nn.BatchNorm1d(128)
-    self.mlp2 = nn.Linear(128+32, 32)
-    self.b2 = nn.BatchNorm1d(32)
-    self.mlp3 = nn.Linear(32+32, 128)
-    self.b3 = nn.BatchNorm1d(128)
-    self.mlp4 = nn.Linear(128+32, 784)
+    self.mlp1 = nn.Linear(784+512, 512)
+    self.b1 = nn.BatchNorm1d(512)
+    self.mlp2 = nn.Linear(512+512, 256)
+    self.b2 = nn.BatchNorm1d(256)
+    self.mlp3 = nn.Linear(256+512, 256)
+    self.b3 = nn.BatchNorm1d(256)
+    self.mlp4 = nn.Linear(256+512, 784)
     self.relu = nn.ReLU()
 
   def forward(self, x, t):
@@ -158,7 +158,7 @@ class UNet(nn.Module):
         self.up4 = (Up(128, 64, bilinear))
         self.outc = (OutConv(64, n_classes))
 
-        input_size = [32, 64, 128, 256, 512, 1024, 512, 256, 128, 64]
+        input_size = [512, 64, 128, 256, 512, 1024, 512, 256, 128, 64]
         self.linears = nn.ModuleList([nn.Linear(input_size[0], input_size[i+1]) for i in range(len(input_size)-1)])
 
     def forward(self, x, t):

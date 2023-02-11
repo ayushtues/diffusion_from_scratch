@@ -13,8 +13,8 @@ else:
 device = torch.device(dev) 
 
 dataloader = get_dataloader()
-curr_sqrt_alpha_ts, curr_sqrt_alpha_hat_ts_2, curr_alpha_ts, curr_beta_ts = get_values(device)
-model = Diffusion(curr_sqrt_alpha_ts, curr_sqrt_alpha_hat_ts_2, curr_alpha_ts, curr_beta_ts, 1, 1)
+sqrt_alpha_hat_ts, sqrt_alpha_hat_ts_2, alpha_ts, beta_ts = get_values(device)
+model = Diffusion(sqrt_alpha_hat_ts, sqrt_alpha_hat_ts_2, alpha_ts, beta_ts, 1, 1)
 
 loss_fn = torch.nn.MSELoss()
 optimizer = torch.optim.Adam(model.parameters())
@@ -31,6 +31,7 @@ def train_one_epoch(epoch_index, batches, tb_writer, run_path, save_freq=200):
           return running_loss/(i+1)
         x, y, t = data
         x = x.to(device)
+        x = x*2 - 1
         t = t.to(device)
         t = t.squeeze(-1)
         t_embed = get_position_embeddings(t, device)
@@ -63,9 +64,9 @@ def train_one_epoch(epoch_index, batches, tb_writer, run_path, save_freq=200):
             tb_writer.add_scalar('Loss/train', loss, batch)
 
         # # Track best performance, and save the model's state
-        # if i%save_freq == 0:
-        #     model_path = run_path+'/model_{}_{}'.format(timestamp, batch)
-        #     torch.save(model.state_dict(), model_path)
+        if i%save_freq == 0:
+            model_path = run_path+'/model_{}_{}'.format(timestamp, batch)
+            torch.save(model.state_dict(), model_path)
           
     
 

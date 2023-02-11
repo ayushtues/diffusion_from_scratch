@@ -3,7 +3,7 @@ from dataloader import get_dataloader
 from diffusion import Diffusion
 from torch.utils.tensorboard import SummaryWriter
 from datetime import datetime
-from utils import get_values
+from utils import get_values, print_stats
 import torchvision.transforms as T
 import torchvision
 
@@ -13,13 +13,14 @@ else:
  dev = "cpu" 
 device = torch.device(dev) 
 
-curr_sqrt_alpha_ts, curr_sqrt_alpha_hat_ts_2, curr_alpha_ts, curr_beta_ts = get_values(device)
-model = Diffusion(curr_sqrt_alpha_ts, curr_sqrt_alpha_hat_ts_2, curr_alpha_ts, curr_beta_ts, 1, 1)
-model.load_state_dict(torch.load("/content/drive/MyDrive/diffusion/diffusion_from_scratch/runs/fashion_trainer_20230210_123428/model_20230210_123428_938"))
+sqrt_alpha_hat_ts, sqrt_alpha_hat_ts_2, alpha_ts, beta_ts = get_values(device)
+model = Diffusion(sqrt_alpha_hat_ts, sqrt_alpha_hat_ts_2, alpha_ts, beta_ts, 1, 1)
+model.load_state_dict(torch.load("/content/drive/MyDrive/diffusion/diffusion_from_scratch/runs/fashion_trainer_20230211_091631/model_20230211_091631_938"))
 
 model = model.to(device)
 model.eval()
 x  = model.sample(device)
-print(len(x))
-print(x[0].shape)
+x  = torch.stack(x)
+print_stats(x, "x")
+print(x.shape)
 torchvision.utils.save_image(x, 'sample.png')

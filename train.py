@@ -13,8 +13,8 @@ else:
 device = torch.device(dev)
 
 dataloader = get_dataloader()
-sqrt_alpha_hat_ts, sqrt_alpha_hat_ts_2, alpha_ts, beta_ts = get_values(device)
-model = Diffusion(sqrt_alpha_hat_ts, sqrt_alpha_hat_ts_2, alpha_ts, beta_ts, 1, 1)
+sqrt_alpha_hat_ts, sqrt_alpha_hat_ts_2, alpha_ts, beta_ts, post_std = get_values(device)
+model = Diffusion(sqrt_alpha_hat_ts, sqrt_alpha_hat_ts_2, alpha_ts, beta_ts, post_std, 1, 1)
 
 loss_fn = torch.nn.MSELoss()
 optimizer = torch.optim.Adam(model.parameters())
@@ -31,7 +31,7 @@ def train_one_epoch(epoch_index, batches, tb_writer, run_path, save_freq=200):
             return running_loss / (i + 1)
         x, y, t = data
         x = x.to(device)
-        x = x.view(x.shape[0], -1, 1, 1)
+        # x = x.view(x.shape[0], -1, 1, 1)
         x = x * 2 - 1
         t = t.to(device)
         t = t.squeeze(-1)

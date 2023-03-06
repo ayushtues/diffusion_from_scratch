@@ -32,7 +32,7 @@ def positionalencoding1d(d_model, length):
 
 
 def get_position_embeddings(t, device):
-    x = positionalencoding1d(64, 1000).to(device)
+    x = positionalencoding1d(512, 1000).to(device)
     emb = x[t]
     return emb
 

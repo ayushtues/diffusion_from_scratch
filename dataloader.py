@@ -15,6 +15,7 @@ class Mnist_custom(torchvision.datasets.MNIST):
         # doing this so that it is consistent with all other datasets
         # to return a PIL Image
         img = Image.fromarray(img.numpy(), mode="L")
+        img = img.resize((32, 32))
 
         if self.transform is not None:
             img = self.transform(img)

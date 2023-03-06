@@ -1,6 +1,6 @@
 import torch
 from torch import nn
-from models import UNet, SimpleMLP, SimpleMLP2
+from models import UNet, SimpleMLP, SimpleMLP2, SimpleUnet
 from models import get_position_embeddings
 from utils import print_stats
 
@@ -18,7 +18,8 @@ class Diffusion(nn.Module):
         bilinear=False,
     ):
         super(Diffusion, self).__init__()
-        self.model = UNet(n_channels, n_classes, bilinear=False)
+        # self.model = UNet(n_channels, n_classes, bilinear=False)
+        self.model = SimpleUnet()
         # self.model = SimpleMLP()
         # self.model = SimpleMLP2()
         self.sqrt_alpha_hat_ts = sqrt_alpha_hat_ts
@@ -51,22 +52,27 @@ class Diffusion(nn.Module):
         return eps_pred
 
     def sample(self, device):
-        x = torch.randn([1, 1, 28, 28], device=device)
+        # x = torch.randn([1, 1, 28, 28], device=device)
+        x = torch.randn([1, 1, 32, 32], device=device)
         # x = torch.randn([1, 2, 1, 1], device=device)
         x_returned = []
         for i in reversed(range(1000)):
-            t = get_position_embeddings(i, device).unsqueeze(0)
+            # t = get_position_embeddings(i, device).unsqueeze(0)
+            t = torch.ones([1], device=device)*i
+            # print("x1:", x.shape)
             eps_pred = self.model(x, t)
-            # print_stats(x, f"eps_pred_{i}")
+            print_stats(x, f"eps_pred_{i}")
             eps_pred = (
                 self.alpha_ts_2[i].unsqueeze(-1).unsqueeze(-1).unsqueeze(-1)
                 / self.sqrt_alpha_hat_ts_2[i].unsqueeze(-1).unsqueeze(-1).unsqueeze(-1)
             ) * eps_pred
-            # print_stats(x, f"eps_pred2_{i}")
+            print_stats(x, f"eps_pred2_{i}")
             x = x - eps_pred
             x = x * (
                 1 / self.sqrt_alpha_ts[i].unsqueeze(-1).unsqueeze(-1).unsqueeze(-1)
             )
+            # print("x2:", x.shape)
+
             if i != 0:
                 z = torch.rand_like(x, device=device)
                 z = self.post_std[i].unsqueeze(-1).unsqueeze(-1).unsqueeze(-1) * z
@@ -74,7 +80,7 @@ class Diffusion(nn.Module):
                 z = torch.zeros_like(x, device=device)
             x = x + z
 
-            # print_stats(x, i)
+            print_stats(x, i)
 
             if i % 50 == 0:
                 x_img = (x + 1.0) / 2

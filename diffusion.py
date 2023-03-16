@@ -18,8 +18,8 @@ class Diffusion(nn.Module):
         bilinear=False,
     ):
         super(Diffusion, self).__init__()
-        # self.model = UNet(n_channels, n_classes, bilinear=False)
-        self.model = SimpleUnet()
+        self.model = UNet(n_channels, n_classes, bilinear=False)
+        # self.model = SimpleUnet()
         # self.model = SimpleMLP()
         # self.model = SimpleMLP2()
         self.sqrt_alpha_hat_ts = sqrt_alpha_hat_ts
@@ -57,8 +57,8 @@ class Diffusion(nn.Module):
         # x = torch.randn([1, 2, 1, 1], device=device)
         x_returned = []
         for i in reversed(range(1000)):
-            # t = get_position_embeddings(i, device).unsqueeze(0)
-            t = torch.ones([1], device=device)*i
+            t = get_position_embeddings(i, device).unsqueeze(0)
+            # t = torch.ones([1], device=device)*i
             # print("x1:", x.shape)
             eps_pred = self.model(x, t)
             # print_stats(x, f"eps_pred_{i}")

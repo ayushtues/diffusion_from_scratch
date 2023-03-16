@@ -32,7 +32,7 @@ def positionalencoding1d(d_model, length):
 
 
 def get_position_embeddings(t, device):
-    x = positionalencoding1d(512, 1000).to(device)
+    x = positionalencoding1d(32, 1000).to(device)
     emb = x[t]
     return emb
 
@@ -191,7 +191,7 @@ class UNet(nn.Module):
         self.up4 = Up(128, 64, bilinear)
         self.outc = OutConv(64, n_classes)
 
-        input_size = [512, 64, 128, 256, 512, 1024, 512, 256, 128, 64]
+        input_size = [32, 64, 128, 256, 512, 1024, 512, 256, 128, 64]
         self.linears = nn.ModuleList(
             [
                 nn.Linear(input_size[0], input_size[i + 1])

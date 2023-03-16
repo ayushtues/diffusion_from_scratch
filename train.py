@@ -62,8 +62,8 @@ def train_one_epoch(epoch_index, batches, tb_writer, run_path, save_freq=2000):
         x = x * 2 - 1
         t = t.to(device)
         t = t.squeeze(-1)
-        # t_embed = get_position_embeddings(t, device)
-        t_embed = t
+        t_embed = get_position_embeddings(t, device)
+        # t_embed = t
         eps = torch.randn_like(x)
 
         # Zero your gradients for every batch!

@@ -15,7 +15,7 @@ def get_values(device):
   sqrt_alpha_ts = torch.sqrt(alpha_ts)
   sqrt_alpha_hat_ts = torch.sqrt(alpha_hat_ts)
   sqrt_alpha_hat_ts_2 = torch.sqrt(1-alpha_hat_ts)
-  post_std = torch.sqrt((alpha_hat_ts_prev/alpha_hat_ts)*beta_ts)
+  post_std = torch.sqrt(((1-alpha_hat_ts_prev)/(1-alpha_hat_ts))*beta_ts)
 
   # prev_sqrt_alpha_hat_ts = sqrt_alpha_hat_ts[:-1] # sqrt(alpha_hat_t-1)
   # prev_alpha_hat_ts = alpha_hat_ts[:-1] # alpha_hat_t-1

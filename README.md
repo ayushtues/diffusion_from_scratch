@@ -20,4 +20,4 @@ End goal is to be able to code something following the basic concepts of diffusi
 
 ## Samples
 
-Currently the model is making the noise increase and explode, need to figure out how to stabilize it 
+Currently the model is able to produce some digits till T = 300 or something, after that it explodes

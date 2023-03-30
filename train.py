@@ -9,6 +9,10 @@ from datetime import datetime
 from utils import get_values, print_stats
 from models import get_position_embeddings
 
+import os
+os.environ['KMP_DUPLICATE_LIB_OK']='True'
+
+
 if torch.cuda.is_available():
     dev = "cuda:0"
 else:
@@ -20,7 +24,7 @@ sqrt_alpha_hat_ts, sqrt_alpha_hat_ts_2, alpha_ts, beta_ts, post_std = get_values
 model = Diffusion(sqrt_alpha_hat_ts, sqrt_alpha_hat_ts_2, alpha_ts, beta_ts, post_std, 1, 1)
 
 loss_fn = torch.nn.MSELoss()
-optimizer = torch.optim.Adam(model.parameters())
+optimizer = torch.optim.Adam(model.parameters(), 2e-4)
 
 def show_tensor_image(image):
     reverse_transforms = transforms.Compose([
@@ -44,7 +48,7 @@ def show_grid_images(x,batch, run_path):
       plt.subplot(1, num_images, 1+i)
       show_tensor_image(x[i].detach().cpu())
     plt.savefig("{}/{}.jpg".format(run_path, batch))
-    plt.show()  
+    # plt.show()  
 
 
 def train_one_epoch(epoch_index, batches, tb_writer, run_path, save_freq=2000):
@@ -63,7 +67,7 @@ def train_one_epoch(epoch_index, batches, tb_writer, run_path, save_freq=2000):
         t = t.to(device)
         t = t.squeeze(-1)
         t_embed = get_position_embeddings(t, device)
-        # t_embed = t
+        t_embed = t
         eps = torch.randn_like(x)
 
         # Zero your gradients for every batch!
@@ -90,7 +94,7 @@ def train_one_epoch(epoch_index, batches, tb_writer, run_path, save_freq=2000):
             print("  batch {} loss: {}".format(batch, loss))
             tb_writer.add_scalar("Loss/train", loss, batch)
         
-        if i % 100 == 0 :
+        if i % 500 == 0 :
             x = model.sample(device)
             show_grid_images(x, batch, run_path)
 

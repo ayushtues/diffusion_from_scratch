@@ -43,8 +43,8 @@ def get_values(device):
   beta_1 = 1e-4
   beta_T = 0.02
 
-  # beta_ts = torch.linspace(beta_1, beta_T, 1000)
-  beta_ts = get_cosine_schedule(1000)
+  beta_ts = torch.linspace(beta_1, beta_T, 1000)
+#   beta_ts = get_cosine_schedule(1000)
   alpha_ts = 1 - beta_ts
   alpha_hat_ts  = torch.cumprod(alpha_ts, 0)
   alpha_hat_ts_prev = F.pad(alpha_hat_ts[:-1], (1, 0), 'constant',1.0)

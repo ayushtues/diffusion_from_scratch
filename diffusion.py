@@ -4,9 +4,6 @@ from models import UNet, SimpleMLP, SimpleMLP2, SimpleUnet
 from models import get_position_embeddings
 from utils import print_stats
 import torch.nn.functional as F
-from unet import UNet2
-
-
 class Diffusion(nn.Module):
     def __init__(
         self,
@@ -20,19 +17,7 @@ class Diffusion(nn.Module):
         bilinear=False,
     ):
         super(Diffusion, self).__init__()
-        # self.model = UNet(n_channels, n_classes, bilinear=False)
-        self.model = UNet2(
-            img_channels=1,
-            base_channels=32,
-            channel_mults=(1, 2, 2, 2),
-            time_emb_dim=32*4,
-            norm="gn",
-            dropout=0.1,
-            activation=F.silu,
-            attention_resolutions=(1,),
-            num_classes=None,
-            initial_pad=0,
-        )
+        self.model = UNet(n_channels, n_classes, bilinear=False)
         # self.model = SimpleUnet()
         # self.model = SimpleMLP()
         # self.model = SimpleMLP2()
@@ -67,35 +52,25 @@ class Diffusion(nn.Module):
 
     @torch.no_grad()
     def sample(self, device):
-        # x = torch.randn([1, 1, 28, 28], device=device)
         x = torch.randn([1, 1, 32, 32], device=device)
-        # x = torch.randn([1, 2, 1, 1], device=device)
         x_returned = []
         for i in reversed(range(1000)):
             t = get_position_embeddings(i, device).unsqueeze(0)
-            t = torch.ones([1], device=device)*i
-            # print("x1:", x.shape)
             eps_pred = self.model(x, t)
-            # print_stats(x, f"eps_pred_{i}")
             eps_pred = (
                 self.alpha_ts_2[i].unsqueeze(-1).unsqueeze(-1).unsqueeze(-1)
                 / self.sqrt_alpha_hat_ts_2[i].unsqueeze(-1).unsqueeze(-1).unsqueeze(-1)
             ) * eps_pred
-            # print_stats(x, f"eps_pred2_{i}")
             x = x - eps_pred
             x = x * (
                 1 / self.sqrt_alpha_ts[i].unsqueeze(-1).unsqueeze(-1).unsqueeze(-1)
             )
-            # print("x2:", x.shape)
-
             if i != 0:
-                z = torch.rand_like(x, device=device)
-                z = self.post_std[i].unsqueeze(-1).unsqueeze(-1).unsqueeze(-1) * z
+                z = torch.randn_like(x, device=device)
+                z = self.sigma_ts[i].unsqueeze(-1).unsqueeze(-1).unsqueeze(-1) * z
             else:
                 z = torch.zeros_like(x, device=device)
             x = x + z
-
-            # print_stats(x, i)
 
             if i % 50 == 0:
                 x_img = (x + 1.0) / 2

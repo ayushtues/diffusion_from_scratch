@@ -19,7 +19,7 @@ sqrt_alpha_hat_ts, sqrt_alpha_hat_ts_2, alpha_ts, beta_ts, post_std = get_values
 model = Diffusion(sqrt_alpha_hat_ts, sqrt_alpha_hat_ts_2, alpha_ts, beta_ts, post_std, 1, 1)
 model.load_state_dict(
     torch.load(
-        "/content/drive/MyDrive/diffusion/diffusion_from_scratch/runs/fashion_trainer_20230314_061157/model_20230314_061157_4686"
+        "D:/diffusion/runs/fashion_trainer_20230331_142757/model_20230331_142757_937"
     )
 )
 

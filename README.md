@@ -12,7 +12,7 @@ End goal is to be able to code something following the basic concepts of diffusi
 - [x] Forward and reverse diffusion process with unlearnt variance
 - [x] Sampling images
 - [x] Cosine noise schedule
-- [ ] EMA for weights
+- [x] EMA for weights
 - [ ] Learned variance
 - [ ] Hybrid loss ( VB + Simple )
 - [ ] Loss based importance sampling of time

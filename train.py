@@ -85,6 +85,7 @@ def train_one_epoch(epoch_index, batches, tb_writer, run_path, save_freq=2000):
 
         # Adjust learning weights
         optimizer.step()
+        model.update_ema()
 
         loss = loss.detach().cpu().numpy()
 

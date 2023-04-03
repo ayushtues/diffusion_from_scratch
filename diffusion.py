@@ -47,7 +47,7 @@ class Diffusion(nn.Module):
                     if old is not None:
                         ema_params.data = old * self.ema_decay + new * (1 - self.ema_decay)
 
-    def forward(self, x, t, t_embed, eps):
+    def forward(self, x, t, t_embed, eps, y=None):
         c1 = (
             torch.gather(self.sqrt_alpha_hat_ts, 0, t)
             .unsqueeze(-1)
@@ -63,17 +63,20 @@ class Diffusion(nn.Module):
 
         input_x = x * c1 + eps * c2
 
-        eps_pred = self.model(input_x, t_embed)
+        eps_pred = self.model(input_x, t_embed, y)
 
         return eps_pred
 
     @torch.no_grad()
-    def sample(self, device):
+    def sample(self, device, y=None):
+        if y is None:
+            y = torch.zeros([1], device=device, dtype=torch.long)
+            y_one_hot = F.one_hot(y, 10).float()
         x = torch.randn([1, 1, 32, 32], device=device)
         x_returned = []
         for i in reversed(range(1000)):
             t = get_position_embeddings(i, device).unsqueeze(0)
-            eps_pred = self.ema_model(x, t)
+            eps_pred = self.ema_model(x, t, y_one_hot)
             eps_pred = (
                 self.alpha_ts_2[i].unsqueeze(-1).unsqueeze(-1).unsqueeze(-1)
                 / self.sqrt_alpha_hat_ts_2[i].unsqueeze(-1).unsqueeze(-1).unsqueeze(-1)

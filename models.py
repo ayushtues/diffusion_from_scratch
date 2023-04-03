@@ -129,6 +129,8 @@ class UNet(nn.Module):
         self.up4 = Up(128, 64, bilinear)
         self.outc = OutConv(64, n_classes)
 
+        self.class_embed = nn.Linear(10, 32)
+
         input_size = [32, 64, 128, 256, 512, 1024, 512, 256, 128, 64]
         self.linears = nn.ModuleList(
             [
@@ -137,8 +139,11 @@ class UNet(nn.Module):
             ]
         )
 
-    def forward(self, x, t):
+    def forward(self, x, t, y):
         x1 = self.inc(x)
+        if y is not None:
+            y_embed = self.class_embed(y)
+            t = t + y_embed
         t1 = self.linears[0](t)
         t1 = t1.unsqueeze(-1).unsqueeze(-1)
         x1 = x1 + t1

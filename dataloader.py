@@ -30,25 +30,6 @@ class Mnist_custom(torchvision.datasets.MNIST):
         return img, target, time
 
 
-class Simple2dDataset(Dataset):
-    def __init__(self):
-        super().__init__()
-
-    def __len__(self):
-        return 10000
-
-    def __getitem__(self, idx):
-        if torch.is_tensor(idx):
-            idx = idx.tolist()
-
-        x = torch.rand(1)
-        x = x.repeat(2)
-        time = torch.randint(
-            0, 1000, (1,)
-        )  # time value needed in diffusion models, might add time embeddings here only in future
-        return x, 1, time
-
-
 def get_dataloader():
     mnist = Mnist_custom(root='./data', train=True, download=True, transform=ToTensor())
     dataloader = DataLoader(mnist, batch_size=128, shuffle=True, drop_last=True)

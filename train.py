@@ -61,7 +61,9 @@ def train_one_epoch(epoch_index, batches, tb_writer, run_path, save_freq=2000):
         if batch == batches:
             return running_loss / (i + 1)
         x, y, t = data
+        y_one = torch.nn.functional.one_hot(y, 10).float()
         x = x.to(device)
+        y_one = y_one.to(device)
         # x = x.view(x.shape[0], -1, 1, 1)
         x = x * 2 - 1
         t = t.to(device)
@@ -74,7 +76,7 @@ def train_one_epoch(epoch_index, batches, tb_writer, run_path, save_freq=2000):
         optimizer.zero_grad()
 
         # Make predictions for this batch
-        eps_pred = model(x, t, t_embed, eps)
+        eps_pred = model(x, t, t_embed, eps, y_one)
 
         # print_stats(eps, "eps")
         # print_stats(eps_pred, "eps_pred")

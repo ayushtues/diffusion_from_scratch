@@ -16,6 +16,7 @@ End goal is to be able to code something following the basic concepts of diffusi
 - [x] Class conditioned sampling
 - [ ] Classifier guidance
 - [ ] Classifier free guidance
+- [ ] Latent Diffusion Model
 - [ ] Learned variance
 - [ ] Hybrid loss ( VB + Simple )
 - [ ] Loss based importance sampling of time

@@ -13,9 +13,10 @@ End goal is to be able to code something following the basic concepts of diffusi
 - [x] Sampling images
 - [x] Cosine noise schedule
 - [x] EMA for weights
-- [ ] Class conditioned sampling
+- [x] Class conditioned sampling
 - [ ] Classifier guidance
 - [ ] Classifier free guidance
+- [ ] Latent Diffusion Model
 - [ ] Learned variance
 - [ ] Hybrid loss ( VB + Simple )
 - [ ] Loss based importance sampling of time
@@ -23,4 +24,4 @@ End goal is to be able to code something following the basic concepts of diffusi
 
 ## Samples
 
-Currently the model is able to produce some digits till T = 300 or something, after that it explodes
+Able to generate good samples for MNIST

@@ -8,6 +8,7 @@ import torchvision.transforms as T
 import torchvision
 from torchvision import transforms 
 import matplotlib.pyplot as plt
+from models import Classifier
 import numpy as np 
 if torch.cuda.is_available():
     dev = "cuda:0"
@@ -19,9 +20,17 @@ sqrt_alpha_hat_ts, sqrt_alpha_hat_ts_2, alpha_ts, beta_ts, post_std = get_values
 model = Diffusion(sqrt_alpha_hat_ts, sqrt_alpha_hat_ts_2, alpha_ts, beta_ts, post_std, 1, 1)
 model.load_state_dict(
     torch.load(
-        "D:/diffusion/model_20230403_122029_8425"
+        "D:/diffusion/runs/fashion_trainer_20230410_151501/model_20230410_151501_1"
     )
 )
+
+classifier = Classifier()
+classifier.load_state_dict(
+    torch.load(
+        "runs/mnist_classifier20230410_131629/classifier_20230410_131629_2809"
+    )
+)
+
 
 def show_tensor_image(image):
     reverse_transforms = transforms.Compose([
@@ -52,7 +61,7 @@ model = model.to(device)
 model.train(True) # okay why is this causing so much difference
 y = torch.ones([1], dtype=torch.long, device=device)*5
 y_one_hot = torch.nn.functional.one_hot(y, 10).float()
-x = model.sample(device, y_one_hot)
+x = model.sample(device, y_one_hot, classifier)
 show_grid_images(x)
 x = torch.stack(x)
 print_stats(x, "x")

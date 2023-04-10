@@ -139,7 +139,7 @@ class UNet(nn.Module):
             ]
         )
 
-    def forward(self, x, t, y):
+    def forward(self, x, t, y=None):
         x1 = self.inc(x)
         if y is not None:
             y_embed = self.class_embed(y)
@@ -186,20 +186,34 @@ class UNet(nn.Module):
 class Classifier(nn.Module):
     def __init__(self):
         super().__init__()
-        self.conv1 = nn.Conv2d(1, 6, 5)
+        self.conv1 = nn.Conv2d(1, 12, 3)
+        self.conv2 = nn.Conv2d(12, 12, 3)
         self.pool = nn.MaxPool2d(2, 2)
-        self.conv2 = nn.Conv2d(6, 16, 5)
-        self.fc1 = nn.Linear(16 * 5 * 5, 120)
-        self.fc2 = nn.Linear(120, 84)
+        self.conv3 = nn.Conv2d(12, 32, 3)
+        self.conv4 = nn.Conv2d(32, 32, 3)
+        self.fc1 = nn.Linear(32 * 5 * 5, 120)
+        self.fc2 = nn.Linear(120+32, 84)
         self.fc3 = nn.Linear(84, 10)
 
-    def forward(self, x):
-        x = self.pool(F.relu(self.conv1(x)))
-        x = self.pool(F.relu(self.conv2(x)))
+    def forward(self, x, t_embed):
+        x = self.pool(F.relu(self.conv2(F.relu(self.conv1(x)))))
+        x = self.pool(F.relu(self.conv4(F.relu(self.conv3(x)))))
         x = torch.flatten(x, 1) # flatten all dimensions except batch
         x = F.relu(self.fc1(x))
+        x = torch.cat([x, t_embed], dim=1)
         x = F.relu(self.fc2(x))
         x = self.fc3(x)
         return x
 
 
+
+
+def cond_fn(x, t_embed, classifier, y=None, scale=1):
+    assert y is not None
+    with torch.enable_grad():
+        x_in = x.detach().requires_grad_(True)
+        logits = classifier(x_in, t_embed)
+        log_probs = F.log_softmax(logits, dim=-1)
+        selected = log_probs[range(len(logits)), y.view(-1)]
+        return torch.autograd.grad(selected.sum(), x_in)[0] * scale
+    

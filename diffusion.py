@@ -1,7 +1,7 @@
 import torch
 from torch import nn
 from models import UNet
-from models import get_position_embeddings
+from models import get_position_embeddings, cond_fn
 from utils import print_stats
 import torch.nn.functional as F
 from copy import deepcopy
@@ -16,6 +16,7 @@ class Diffusion(nn.Module):
         n_channels,
         n_classes,
         bilinear=False,
+        class_conditioned=False
     ):
         super(Diffusion, self).__init__()
         self.model = UNet(n_channels, n_classes, bilinear=False)
@@ -35,6 +36,7 @@ class Diffusion(nn.Module):
         self.sigma_ts = torch.sqrt(beta_ts)
         self.alpha_ts_2 = 1 - self.alpha_ts
         self.post_std = post_std
+        self.class_conditioned = class_conditioned
 
     def update_ema(self):
         self.step += 1
@@ -62,25 +64,31 @@ class Diffusion(nn.Module):
         )
 
         input_x = x * c1 + eps * c2
-
-        eps_pred = self.model(input_x, t_embed, y)
+        if self.class_conditioned:
+            eps_pred = self.model(input_x, t_embed, y)
+        else:
+            eps_pred = self.model(input_x, t_embed)
 
         return eps_pred
 
     @torch.no_grad()
-    def sample(self, device, y=None):
+    def sample(self, device, y=None, classifier=None):
         if y is None:
             y = torch.zeros([1], device=device, dtype=torch.long)
             y = F.one_hot(y, 10).float()
         x = torch.randn([1, 1, 32, 32], device=device)
         x_returned = []
         for i in reversed(range(1000)):
-            t = get_position_embeddings(i, device).unsqueeze(0)
-            eps_pred = self.ema_model(x, t, y)
+            t_embed = get_position_embeddings(i, device).unsqueeze(0)
+            if self.class_conditioned:
+                eps_pred = self.ema_model(x, t_embed, y)
+            else:
+                eps_pred = self.ema_model(x, t_embed)
             eps_pred = (
                 self.alpha_ts_2[i].unsqueeze(-1).unsqueeze(-1).unsqueeze(-1)
                 / self.sqrt_alpha_hat_ts_2[i].unsqueeze(-1).unsqueeze(-1).unsqueeze(-1)
             ) * eps_pred
+            x_old = x
             x = x - eps_pred
             x = x * (
                 1 / self.sqrt_alpha_ts[i].unsqueeze(-1).unsqueeze(-1).unsqueeze(-1)
@@ -88,6 +96,12 @@ class Diffusion(nn.Module):
             if i != 0:
                 z = torch.randn_like(x, device=device)
                 z = self.sigma_ts[i].unsqueeze(-1).unsqueeze(-1).unsqueeze(-1) * z
+
+                if classifier is not None:
+                    t_embed2 = get_position_embeddings(i-1, device).unsqueeze(0)
+                    y_index = torch.argmax(y, dim=1)
+                    gradient = cond_fn(x_old, t_embed2, classifier, y_index)
+                    x = x + self.beta_ts[i]*gradient*1.0
             else:
                 z = torch.zeros_like(x, device=device)
             x = x + z

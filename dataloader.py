@@ -30,7 +30,7 @@ class Mnist_custom(torchvision.datasets.MNIST):
         return img, target, time
 
 
-def get_dataloader():
-    mnist = Mnist_custom(root='./data', train=True, download=True, transform=ToTensor())
+def get_dataloader(train=True):
+    mnist = Mnist_custom(root='./data', train=train, download=True, transform=ToTensor())
     dataloader = DataLoader(mnist, batch_size=128, shuffle=True, drop_last=True)
     return dataloader

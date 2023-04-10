@@ -71,12 +71,12 @@ class Diffusion(nn.Module):
     def sample(self, device, y=None):
         if y is None:
             y = torch.zeros([1], device=device, dtype=torch.long)
-            y_one_hot = F.one_hot(y, 10).float()
+            y = F.one_hot(y, 10).float()
         x = torch.randn([1, 1, 32, 32], device=device)
         x_returned = []
         for i in reversed(range(1000)):
             t = get_position_embeddings(i, device).unsqueeze(0)
-            eps_pred = self.ema_model(x, t, y_one_hot)
+            eps_pred = self.ema_model(x, t, y)
             eps_pred = (
                 self.alpha_ts_2[i].unsqueeze(-1).unsqueeze(-1).unsqueeze(-1)
                 / self.sqrt_alpha_hat_ts_2[i].unsqueeze(-1).unsqueeze(-1).unsqueeze(-1)

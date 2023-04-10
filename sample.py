@@ -19,7 +19,7 @@ sqrt_alpha_hat_ts, sqrt_alpha_hat_ts_2, alpha_ts, beta_ts, post_std = get_values
 model = Diffusion(sqrt_alpha_hat_ts, sqrt_alpha_hat_ts_2, alpha_ts, beta_ts, post_std, 1, 1)
 model.load_state_dict(
     torch.load(
-        "D:/diffusion/runs/fashion_trainer_20230331_142757/model_20230331_142757_937"
+        "D:/diffusion/model_20230403_122029_8425"
     )
 )
 
@@ -50,7 +50,9 @@ def show_grid_images(x):
 
 model = model.to(device)
 model.train(True) # okay why is this causing so much difference
-x = model.sample(device)
+y = torch.ones([1], dtype=torch.long, device=device)*5
+y_one_hot = torch.nn.functional.one_hot(y, 10).float()
+x = model.sample(device, y_one_hot)
 show_grid_images(x)
 x = torch.stack(x)
 print_stats(x, "x")
